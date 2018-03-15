@@ -21,6 +21,9 @@
 `float` **entropy**(): get the samples' entropy.
 
 ---
+`float` **unbalanced**(): entropy / log N, where, N is the number of classes.
+
+---
 `list` **extract**(): extract all the information bellow.
 - Number of instances
 - Number of features
