@@ -94,17 +94,24 @@ class Observer():
 
         return result
 
+    def unbalanced(self):
+        """Get the unbalaced metric, where 1 is very balanced and 0 extremely unbalaced."""
+        sety = set(self.__y())
+        n = len(sety)
+
+        return self.entropy() / log2(n)
+
     def extract(self):
         """Extract all the observed information.
 
         Return
-            [n_instances, n_features, n_targets, silhouette, entropy]
+            [n_instances, n_features, n_targets, silhouette, unbalanced]
         """
         i = self.n_instances()
         f = self.n_features()
         t = self.n_targets()
         s = self.silhouette()
-        e = self.entropy()
+        u = self.unbalaced()
 
-        return [i, f, t, s, e]
+        return [i, f, t, s, u]
 
