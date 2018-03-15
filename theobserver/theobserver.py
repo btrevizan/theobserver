@@ -111,7 +111,7 @@ class Observer():
         f = self.n_features()
         t = self.n_targets()
         s = self.silhouette()
-        u = self.unbalaced()
+        u = self.unbalanced()
 
         return [i, f, t, s, u]
 
