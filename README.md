@@ -10,6 +10,7 @@ A dataset characteristic extractor for machine learning processing.
 - Silhouette (Dunn Index)
 - Entropy
 - Unbalanced
+- Number of binary features
 
 ### Installation
 ```bash
@@ -26,7 +27,7 @@ obs = Observer('examples/letter_0.csv', target_i=0)
 obs.n_instances()
 
 # Return all characteristics
-# [n_instances, n_features, n_targets, silhouette, unbalanced]
+# [n_instances, n_features, n_targets, silhouette, unbalanced, n_binary_features]
 obs.extract()
 ```
 
