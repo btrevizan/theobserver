@@ -101,17 +101,27 @@ class Observer():
 
         return self.entropy() / log2(n)
 
+    def n_binary_features(self):
+        """Get the number of binary features, i.e., features with only 2 labels."""
+        x = self.__x()
+        m, n = x.shape
+
+        bin_features = [len(set(x.iloc[:, j])) == 2 for j in range(n)]
+
+        return sum(bin_features)
+
     def extract(self):
         """Extract all the observed information.
 
         Return
-            [n_instances, n_features, n_targets, silhouette, unbalanced]
+            [n_instances, n_features, n_targets, silhouette, unbalanced, n_binary_features]
         """
         i = self.n_instances()
         f = self.n_features()
         t = self.n_targets()
         s = self.silhouette()
         u = self.unbalanced()
+        b = self.n_binary_features()
 
-        return [i, f, t, s, u]
+        return [i, f, t, s, u, b]
 
