@@ -4,7 +4,7 @@ from setuptools import setup
 setup(
     name='theobserver',
     packages=['theobserver'],
-    version='2.0',
+    version='3.0',
     description='A dataset characteristic extractor for machine learning processing.',
     author='Bernardo Trevizan',
     author_email='trevizanbernardo@gmail.com',

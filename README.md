@@ -27,7 +27,6 @@ obs = Observer('examples/letter_0.csv', target_i=0)
 obs.n_instances()
 
 # Return all characteristics
-# [n_instances, n_features, n_targets, silhouette, unbalanced, n_binary_features]
 obs.extract()
 ```
 
