@@ -32,19 +32,27 @@ class Observer():
 
         return ',' if comma > semicolon else ';'
 
-    def __x(self):
-        data = read_csv(self.filepath, self.__sep(), header=None)
+    def __data(self, na_values=[]):
+        na_values = ['?'] + na_values
+        data = read_csv(self.filepath, self.__sep(), header=None, na_values=na_values)
         _, n_columns = data.shape
 
         # Initial and final column index (exclusive on stop)
         i = self.target_i + 1            # initial
         j = n_columns + self.target_i    # final + 1 (because it's exclusive)
 
-        return data.iloc[:, i:j]
+        X = data.iloc[:, i:j]
+        y = data.iloc[:, self.target_i]
 
-    def __y(self):
-        data = read_csv(self.filepath, self.__sep(), header=None)
-        return data.iloc[:, self.target_i]
+        return X, y
+
+    def __x(self, na_values=[]):
+        X, y = self.__data(na_values)
+        return X
+
+    def __y(self, na_values=[]):
+        X, y = self.__data(na_values)
+        return y
 
     def n_instances(self):
         """Get the number of instances."""
@@ -110,18 +118,75 @@ class Observer():
 
         return sum(bin_features)
 
+    def majority_class_size(self):
+        """Get the number of instances labeled with the most frequent class."""
+        y = self.__y()
+        sety, counts = np.unique(y, return_counts=True)
+
+        return np.max(counts)
+
+    def minority_class_size(self):
+        """Get the number of instances labeled with the least frequent class."""
+        y = self.__y()
+        sety, counts = np.unique(y, return_counts=True)
+
+        return np.min(counts)
+
+    def features_with_na(self, na_values=[]):
+        """Get the number of features with missing values.
+
+        Arguments:
+            na_values: list (default [])
+                a list of strings or ints to interpret as NaN values.
+        """
+        X = self.__x(na_values)
+        X_na = X.isnull().any()
+
+        return X_na.sum()
+
+    def missing_values(self, na_values=[]):
+        """Get the number of missing values.
+
+        Arguments:
+            na_values: list (default [])
+                a list of strings or ints to interpret as NaN values.
+        """
+        X = self.__x(na_values)
+        y = self.__y(na_values)
+
+        X_na = X.isnull()
+        y_na = y.isnull()
+
+        X_na_sum = X_na.sum().sum()
+        y_na_sum = y_na.sum().sum()
+
+        return X_na_sum + y_na_sum
+
     def extract(self):
         """Extract all the observed information.
 
         Return
-            [n_instances, n_features, n_targets, silhouette, unbalanced, n_binary_features]
+            [n_instances,
+             n_features,
+             n_targets,
+             silhouette,
+             unbalanced,
+             n_binary_features,
+             majority_class_size,
+             minority_class_size,
+             features_with_na,
+             missing_values]
         """
-        i = self.n_instances()
-        f = self.n_features()
-        t = self.n_targets()
-        s = self.silhouette()
-        u = self.unbalanced()
-        b = self.n_binary_features()
+        ins = self.n_instances()
+        fea = self.n_features()
+        tar = self.n_targets()
+        sil = self.silhouette()
+        unb = self.unbalanced()
+        nbi = self.n_binary_features()
+        maj = self.majority_class_size()
+        mio = self.minority_class_size()
+        fna = self.features_with_na()
+        nav = self.missing_values()
 
-        return [i, f, t, s, u, b]
+        return [ins, fea, tar, sil, unb, nbi, maj, mio, fna, nav]
 
