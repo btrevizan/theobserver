@@ -11,6 +11,10 @@ A dataset characteristic extractor for machine learning processing.
 - Entropy
 - Unbalanced
 - Number of binary features
+- Majority class size
+- Minority class size
+- Number of features with missing values
+- Number of missing values
 
 ### Installation
 ```bash
