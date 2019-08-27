@@ -5,27 +5,31 @@ from pandas import read_csv
 from sklearn.metrics import silhouette_score
 
 
-class Observer():
+class Observer:
     """Observe and extract information about a dataset.
 
     Arguments
-        filepath: string
+        __filepath: string
             The dataset's absolute/relative path. Must be a CSV format file.
 
-        target_i: {-1, 0}
+        __target_i: {-1, 0}
             The target's column index. The default is -1.
 
     Return
         An Observer object
     """
-    def __init__(self, filepath, target_i=-1):
-        self.filepath = filepath
-        self.target_i = target_i
+    def __init__(self, filepath, target_i=-1, header=None, index_col=None):
+        self.__filepath = filepath
+        self.__target_i = target_i
+
+        self.__header = header
+        self.__index_col = index_col
+
+        self.__filedata = None
 
     def __sep(self):
-        file = open(self.filepath)
-        line = file.readline()
-        file.close()
+        with open(self.__filepath, 'r') as file:
+            line = file.readline()
 
         comma = line.count(',')
         semicolon = line.count(';')
@@ -33,81 +37,98 @@ class Observer():
         return ',' if comma > semicolon else ';'
 
     def __data(self, na_values=[]):
+        if self.__filedata:
+            return self.__filedata
+
         na_values = ['?'] + na_values
-        data = read_csv(self.filepath, self.__sep(), header=None, na_values=na_values)
+
+        data = read_csv(self.__filepath,
+                        self.__sep(),
+                        header=self.__header,
+                        index_col=self.__index_col,
+                        na_values=na_values)
+
         _, n_columns = data.shape
 
         # Initial and final column index (exclusive on stop)
-        i = self.target_i + 1            # initial
-        j = n_columns + self.target_i    # final + 1 (because it's exclusive)
+        i = self.__target_i + 1            # initial
+        j = n_columns + self.__target_i    # final + 1 (because it's exclusive)
 
-        X = data.iloc[:, i:j]
-        y = data.iloc[:, self.target_i]
+        x = data.iloc[:, i:j]
+        y = data.iloc[:, self.__target_i]
 
-        return X, y
+        return x, y
 
     def __x(self, na_values=[]):
-        X, y = self.__data(na_values)
-        return X
+        x, y = self.__data(na_values)
+        return x
 
     def __y(self, na_values=[]):
-        X, y = self.__data(na_values)
+        x, y = self.__data(na_values)
         return y
+
+    def __column(self, j):
+        j = self.__target_i if j is None else j
+        column = self.__y() if j == self.__target_i else self.__x().iloc[:, j]
+        return column
 
     def n_instances(self):
         """Get the number of instances."""
-        file = open(self.filepath)
-        i = [1 for line in file]
-        file.close()
-
-        return sum(i)
+        x = self.__x()
+        m, _ = x.shape
+        return m
 
     def n_features(self):
         """Get the number of features."""
-        file = open(self.filepath)
-        line = file.readline()
-        file.close()
-
-        d = self.__sep()
-
-        return len(line.split(d)) - 1
+        x = self.__x()
+        _, n = x.shape
+        return n
 
     def n_targets(self):
         """Get the number of targets."""
-        d = self.__sep()
-        file = open(self.filepath)
-
-        targets = [line.split(d)[self.target_i] for line in file]
-        targets = set(targets)
-
+        y = self.__y()
+        targets = set(y.values)
         return len(targets)
 
     def silhouette(self):
         """Get the mean Silhouette Coefficient for all samples."""
-        X = self.__x()
+        x = self.__x()
         y = self.__y()
 
-        return silhouette_score(X, y)
+        return silhouette_score(x, y)
 
-    def entropy(self):
-        """Get the samples' entropy."""
-        y = self.__y()
-        sety, counts = np.unique(y, return_counts=True)
-        total = len(y)
+    def entropy(self, j=None):
+        """Get the samples' entropy.
+
+        :param j: int (default target_i)
+            Column index.
+
+        :return: float
+        """
+        column = self.__column(j).values
+
+        sety, counts = np.unique(column, return_counts=True)
+        total = sum(counts)
 
         result = 0
-        for target, n in zip(sety, counts):
+        for n in counts:
             p = n / total
-            result = result - (p * log2(p))
+            result = result - p * log2(p)
 
         return result
 
-    def unbalanced(self):
-        """Get the unbalaced metric, where 1 is very balanced and 0 extremely unbalaced."""
-        sety = set(self.__y())
-        n = len(sety)
+    def imbalanced(self, j=None):
+        """Get the unbalaced metric, where 1 is very balanced and 0 extremely unbalaced.
 
-        return self.entropy() / log2(n)
+        :param j: int (default target_i)
+            Column index.
+
+        :return: float
+        """
+        column = set(self.__column(j).values)
+        n = len(column)
+
+        return self.entropy(j) / log2(n)
 
     def n_binary_features(self):
         """Get the number of binary features, i.e., features with only 2 labels."""
@@ -139,10 +160,10 @@ class Observer():
             na_values: list (default [])
                 a list of strings or ints to interpret as NaN values.
         """
-        X = self.__x(na_values)
-        X_na = X.isnull().any()
+        x = self.__x(na_values)
+        x_na = x.isnull().any()
 
-        return X_na.sum()
+        return x_na.sum()
 
     def missing_values(self, na_values=[]):
         """Get the number of missing values.
@@ -151,16 +172,16 @@ class Observer():
             na_values: list (default [])
                 a list of strings or ints to interpret as NaN values.
         """
-        X = self.__x(na_values)
+        x = self.__x(na_values)
         y = self.__y(na_values)
 
-        X_na = X.isnull()
+        x_na = x.isnull()
         y_na = y.isnull()
 
-        X_na_sum = X_na.sum().sum()
+        x_na_sum = x_na.sum().sum()
         y_na_sum = y_na.sum().sum()
 
-        return X_na_sum + y_na_sum
+        return x_na_sum + y_na_sum
 
     def extract(self):
         """Extract all the observed information.
@@ -170,7 +191,7 @@ class Observer():
              n_features,
              n_targets,
              silhouette,
-             unbalanced,
+             imbalanced,
              n_binary_features,
              majority_class_size,
              minority_class_size,
@@ -181,7 +202,7 @@ class Observer():
         fea = self.n_features()
         tar = self.n_targets()
         sil = self.silhouette()
-        unb = self.unbalanced()
+        unb = self.imbalanced()
         nbi = self.n_binary_features()
         maj = self.majority_class_size()
         mio = self.minority_class_size()

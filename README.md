@@ -9,7 +9,7 @@ A dataset characteristic extractor for machine learning processing.
 - Number of targets
 - Silhouette (Dunn Index)
 - Entropy
-- Unbalanced
+- Imbalanced coefficient
 - Number of binary features
 - Majority class size
 - Minority class size

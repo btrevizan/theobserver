@@ -21,7 +21,7 @@
 `float` **entropy**(): get the samples' entropy.
 
 ---
-`float` **unbalanced**(): entropy / log N, where, N is the number of classes.
+`float` **imbalanced**(): entropy / log N, where, N is the number of classes.
 
 ---
 `float` **n_binary_features**(): get the number of binary features, i.e., features with only 2 labels.
